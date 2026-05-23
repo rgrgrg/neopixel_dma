@@ -1,6 +1,6 @@
 #@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#
 #                                                                           #
-#    RP2 NeoPixel_DMA Library v0.1                                          #
+#    RP2 NeoPixel_DMA Library v0.2                                          #
 #    (c) 2026 Radosław Gancarz <radgan99@gmail.com>                         #
 #                                                                           #
 #    This Source Code Form is subject to the terms of the Mozilla Public    #
@@ -92,7 +92,7 @@ class NeoPixel:
         self._dma = rp2.DMA()
         #See RP2040 datasheet 2.5.3.1/RP2350 datasheet 12.6.4.1
         dreq_index = ((self._idx_sm // 4) << 3 ) | (self._idx_sm & 3)
-        self._dma_ctrl=self._dma.pack_ctrl(size = 2, inc_write = False,
+        self._dma_ctrl=self._dma.pack_ctrl(size = 2, inc_write = False, bswap=True,
                                          treq_sel = dreq_index )
         
         
@@ -103,18 +103,18 @@ class NeoPixel:
     def __setitem__(self,idx,val):
         v=0
         for i in range(self.bpp):
-            v |= ( (val[i] & 0xff) << (24 - (self.ORDER[i]<<3) ) )
+            v |= ( (val[i] & 0xff) << (self.ORDER[i]<<3) )
         self._raw[idx] = v
         
         
     def __getitem__(self,idx):
-        return tuple( ( self._raw[idx] >> (24 - (self.ORDER[i]<<3) ) & 0xff ) for i in range(self.bpp))
+        return tuple( ( ( self._raw[idx] >> (self.ORDER[i]<<3) )  & 0xff ) for i in range(self.bpp))
         
         
     def fill(self,val):
         v=0
         for i in range(self.bpp):
-            v |= ( (val[i] & 0xff) << (24 - (self.ORDER[i]<<3) ) )
+            v |= ( (val[i] & 0xff) << (self.ORDER[i]<<3) )
     
         for i in range (self.n):
             self._raw[i] = v
